@@ -1,4 +1,4 @@
-/* CoteLib.c
+/* cote.c
 	AUTHOR: T. COTE
 	DATE  : 9-24-24
 	SCOPE : This is the implimentation of a custom library of functions to be used in UMass Lowells EECE4841
@@ -12,8 +12,12 @@ End File Header*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+#include <math.h>
+#include <fftw2.h>
 
-#include "CoteLib.h"
+
+#include "cote.h"
 
 void helloWorld(void) { printf("Hello World!\n"); }
 

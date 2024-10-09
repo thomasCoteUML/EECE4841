@@ -12,6 +12,10 @@ End File Header*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
+#include <math.h>
+#include <fftw3.h>
+
 
 #include "CoteLib.h"
 

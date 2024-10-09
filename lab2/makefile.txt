@@ -1,0 +1,13 @@
+all: TestFour2floats 
+
+TestFour2floats: TestFour2floats.o Four2.o
+	gcc -g -Wall -o TestFour2floats TestFour2floats.o Four2.o -lm
+
+Four2.o: Four2.c Four2.h Four2_Private.h
+	gcc -g -Wall -c Four2.c
+
+TestFour2floats.o: TestFour2floats.c Four2.h
+	gcc -g -Wall -c TestFour2floats.c
+  
+clean:
+	rm *.o

@@ -20,6 +20,11 @@ typedef struct {
 	unsigned char * array;	// iamge array pointer
 } imgTC;
 
+typedef struct cplx{
+	float real;
+	float imag;
+} cplx;
+
 
 void helloWorld(void);
 /*

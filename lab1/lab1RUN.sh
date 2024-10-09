@@ -11,3 +11,6 @@ printf '%.s─' $(seq 1 $(tput cols))
 ./lab1
 echo $?
 echo ""
+echo "Opening processed image"
+open processedClover.pgm
+echo ""

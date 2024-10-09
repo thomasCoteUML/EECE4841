@@ -1,4 +1,4 @@
-/* CoteLib.h
+/* cote.h
 	AUTHOR: T. COTE
 	DATE  : 9-24-24
 	SCOPE : This is the implimentation of a custom library of functions to be used in UMass Lowell's EECE4841
@@ -9,9 +9,9 @@
 
 End File Header*/
 
-#ifndef COTELIB_H
+#ifndef COTE_H
 
-#define COTELIB_H
+#define COTE_H
 
 typedef struct {
 	int sizeX;		// image X dim
@@ -19,6 +19,11 @@ typedef struct {
 	int levels;		// image pixel depth
 	unsigned char * array;	// iamge array pointer
 } imgTC;
+
+typedef struct cplx{
+	float real;
+	float imag;
+} cplx;
 
 
 void helloWorld(void);
@@ -92,4 +97,4 @@ imgTC pixelProcTC(imgTC image, unsigned char (*func)(int, int, unsigned char) );
 	SCOPE: A program perform pixel processing on images
 */
 
-#endif // COTELIB_H
+#endif // COTE_H

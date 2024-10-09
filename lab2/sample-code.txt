@@ -1,0 +1,355 @@
+README FILE
+
+**********************
+* Assignment-2 Prog2 Sample Files *
+**********************
+
+
+Intro:
+  This is the sample code for Prog2.  The sample program creates
+  a 2D complex array, initializing it to constant data, performing the forward
+  2D fft, then the inverse 2D fft of the results, outputing the results of each
+  step.
+
+
+Executables:
+  TestFour2floats: C version with array of floats as described in class
+  
+
+Instructions:
+  run make, then run the sample program.    
+  
+Files:
+  makefile: builds the c files  and links them into the executable
+  
+  TestFour2floats.c: C version to test Four2 using floats as described in class
+  
+   
+  Four2.h: contains function prototype for fft_Four2 which is accessable to
+           the students
+  
+  Four2_Private.h: countains prototype for functions needed by fft_Four2
+  
+  Four2.c: contains the fft_Four2 function and all dependancies as prototyped in
+           Four2.h and Four2_Private.h, as well as some local variables.
+  
+               
+               
+-------------------------------------------------------
+
+HEADER FILE-1
+
+//cplx.h file
+
+#ifndef CPLX_H
+#define CPLX_H
+
+/*DO NOT EDIT THIS STRUCT*/
+typedef struct cplx{
+	float real;
+	float imag;
+} cplx;
+
+#endif
+
+HEADER FILE-2
+
+//Four2.h
+
+#ifndef FOUR2_H
+#define FOUR2_H
+
+#include <stdbool.h>
+
+//2D fourier Transform
+void fft_Four2(float *im,unsigned sX, unsigned sY, bool inv);
+	
+#endif
+
+
+HEADER FILE-3
+
+//Four2_Private.h
+
+#ifndef FOUR2_PRIVATE
+#define FOUR2_PRIVATE
+
+#include "cplx.h"
+
+cplx* fft_X(int);
+cplx* fft_Y(int);
+
+void fft_shift();
+void fft_Four1(cplx* (*DATA)(int),int nn,int isign);
+
+#endif
+
+MAKEFILE
+
+//makefile
+all: TestFour2floats
+
+TestFour2floats: TestFour2floats.o Four2.o
+	gcc -g -Wall -o TestFour2floats TestFour2floats.o Four2.o -lm
+
+Four2.o: Four2.c Four2.h Four2_Private.h
+	gcc -g -Wall -c Four2.c
+
+TestFour2floats.o: TestFour2floats.c Four2.h
+	gcc -g -Wall -c TestFour2floats.c
+  
+clean:
+	rm *.o
+
+
+
+
+PROGRAM Four2.c provided to you; it has the function ffft_Four2 function, you do not need to go through it, other 
+than use it, as shown how below in TestFour2floats.c program.
+
+
+/* Four2.c
+*/
+
+/ * 
+ It contains 2D FFT functionality which calls 1-D FFT from numerical recipes.
+ */
+
+#include "cplx.h"
+#include "Four2_Private.h"
+#include "Four2.h"
+#include "math.h"
+
+//Pointer to working Image
+struct cplx *fft_image;
+//working image size
+unsigned fft_sizeX;
+unsigned fft_sizeY;
+//working counter
+unsigned fft_rr;
+
+//index working image elements by x axis
+cplx *fft_X(int i){
+  return &(fft_image[i + fft_rr*fft_sizeX]);
+}
+
+//index working image elements by x axis
+cplx *fft_Y(int i){
+  return &(fft_image[fft_rr + i*fft_sizeX]);
+}
+
+//center spectrum in the frequency domain by inverting some pixels in
+//  the spatial domain
+void fft_shift(){
+  for(unsigned j = 0; j < fft_sizeY; j++){
+    for(unsigned i = 0; i < fft_sizeX; i++){
+      fft_image[i+j*fft_sizeX].real *= ((i+j) % 2) ? -1.0 : 1.0;
+      fft_image[i+j*fft_sizeX].imag *= ((i+j) % 2) ? -1.0 : 1.0;
+      
+    }
+  }
+}
+
+//compute 2d FFT of image:  WARNING: Not thread safe
+void fft_Four2(float *im, //image
+               unsigned sX, //width
+               unsigned sY, //height
+               bool inv){ //inverse fft when true
+  
+  //transfer image and size to static variables
+  fft_image = (cplx*)im; //note: pointers are compatible by design of cplx
+  fft_sizeX=sX; 
+  fft_sizeY=sY;
+  
+  int isign = inv ? 1 : -1;
+  //invert every other pixel in the spatial domain for centering in the frequency domain
+  //for forward fft
+  if(!inv){
+    fft_shift();
+  }
+  
+  //run 1D fft for each row
+  for(fft_rr = 0; fft_rr < fft_sizeY; fft_rr++){
+    fft_Four1(fft_X,fft_sizeX,isign);
+  }
+  
+  //run 2D fft for each column
+  for(fft_rr = 0; fft_rr < fft_sizeX; fft_rr++){
+    fft_Four1(fft_Y, fft_sizeY, isign);
+  }
+  
+  //correct magnitude and uncenter result for inverse FFT
+  if(inv){
+    for(unsigned i = 0; i < fft_sizeX*fft_sizeY; i++){
+      fft_image[i].real /= fft_sizeX*fft_sizeY;
+      fft_image[i].imag /= fft_sizeX*fft_sizeY;
+    }
+    fft_shift();
+  }
+
+}
+
+//macro for fft
+
+//This 1-D FFT From numerical Recipes
+#define SWAP(a,b) temp=(a);(a)=(b);(b)=temp
+
+//1D Fast Four Transform Provided by Professor Megherbi
+//  (modified for C++ and application by Peter Mack )
+//  (modified further and converted back to C by Peter Mack)
+void fft_Four1(cplx* (*DATA)(int),
+               int nn, 
+               int isign)
+{
+  int mmax,m,i,jstep,j;
+  double wtemp,theta;
+  cplx w, wp;
+  cplx tempc;
+  float temp;
+  i=0;
+  for (j=0;j<nn;j+=1) {
+    if (i > j) {
+            SWAP(DATA(i)->real,DATA(j)->real);
+            SWAP(DATA(i)->imag,DATA(j)->imag);
+            
+    }
+    m=nn/2;
+    while (m >= 1 && i >= m) {
+            i -= m;
+            m >>= 1;
+    }
+    i += m;
+  }
+  mmax=1;
+  while (nn > mmax) {
+    jstep=mmax*2;
+    theta=2*asin(1)/(isign*(mmax));
+    wtemp=sin(0.5*theta);
+    wp.real = -2.0*wtemp*wtemp;
+    wp.imag = sin(theta);
+    w.real = 1.0;
+    w.imag = 0.0;
+    for (m=0;m<mmax;m+=1) {
+      for (j=m;j<nn;j+=jstep) {
+        i= j + mmax;
+        tempc.real=w.real * DATA(i)->real - w.imag * DATA(i)->imag;
+        tempc.imag=w.real * DATA(i)->imag + w.imag * DATA(i)->real;
+        DATA(i)->real=DATA(j)->real-tempc.real;
+        DATA(i)->imag=DATA(j)->imag-tempc.imag;
+        DATA(j)->real+=tempc.real;
+        DATA(j)->imag+=tempc.imag;
+      }
+      
+      w.real=(wtemp=w.real)*wp.real-w.imag*wp.imag+w.real;
+      w.imag=w.imag*wp.real+wtemp*wp.imag+w.imag;
+      
+    }
+    mmax=jstep;
+  }
+}
+
+
+
+//Below is the c code  TestFour2float that you need that shows an example of how to use 2-D FFT and 2-D IFFT, as an example.
+
+//TestFour2float
+
+
+//Sample code to run 2D FFT
+#include <stdio.h>
+#include <stdlib.h>
+#include "Four2.h"
+
+//to print 
+void printvector(float *data, const unsigned n){
+  unsigned i,j;
+  for(j=0; j<n; j++){
+    if(j==0){
+      printf("\342\224\217 ");
+    }else if (j==n-1){
+      printf("\342\224\227 ");
+    }else{
+      printf("\342\224\203 ");
+    }
+    for(i=0; i<n; i++){
+      printf("%+02.2f%+02.2fi ",data[2*i+j*n*2],data[1+2*i+2*j*n]);
+    }
+    if(j==0){
+      printf("\342\224\223\n");
+    }else if (j==n-1){
+      printf("\342\224\233\n");
+    }else{
+      printf("\342\224\203\n");
+    }
+  }
+}
+
+//main program
+
+int main(int argc, char *argv[]){
+  unsigned i;
+  
+  unsigned n=4; //size of 2D data in both directions; 
+  
+  /* 3 arrays, data, spectrum, output with the following meaning */
+  /* data -->FFT --> spectrum --> IFFT --> output */
+  float *data, *spectrum, *output;
+
+/* create  1-D arrays  of size 2*n*n 
+  
+  data=(float*)calloc(sizeof(float),2*n*n);
+  spectrum=(float*)malloc(sizeof(float)*2*n*n);
+  output=(float*)malloc(sizeof(float)*2*n*n);
+  
+  if(data==0 || spectrum==0 || output==0) return 1;
+  
+  
+  
+  //setup data
+  data[2+1*n*2]=0.1;
+  data[4+1*n*2]=0.5;
+  data[6+1*n*2]=0.3;
+  data[2+2*n*2]=0.5;
+  data[4+2*n*2]=1.0;
+  data[6+2*n*2]=0.5;
+  data[2+3*n*2]=0.3;
+  data[4+3*n*2]=0.5;
+  data[6+3*n*2]=0.3;
+  
+  /* since fourl destroys the input array with the output */
+  /* use the output of the FFT as the input value */
+  
+  for(i=0; i<2*n*n; i++){
+    spectrum[i]=data[i];
+  }
+  //call 2D fft
+  fft_Four2(spectrum,n,n,false);
+  
+  /*copy spectrum into output and call invcrse FFT */
+  for(i=0; i<2*n*n; i++){
+    output[i]=spectrum[i];
+  }
+  fft_Four2(output,n,n,true);
+  
+  printf("Data\n");
+  printvector(data,n);
+  
+  printf("Spectrum:\n");
+  printvector(spectrum,n);
+  
+  printf("Output:\n");
+  printvector(output,n);
+
+  free(data);
+  free(spectrum);
+  free(output);
+    
+}
+
+
+
+
+
+
+
+

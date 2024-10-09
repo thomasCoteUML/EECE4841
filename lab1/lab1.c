@@ -13,12 +13,12 @@ End File Header*/
 #include "CoteLib.h"
 
 // pixel processing function definition
-unsigned char pixelFunc(int i, int j, unsigned char p, int *k);
+unsigned char pixelFunc(int i, int j, unsigned char p);
 
 // file names for input and output image files
 static char * INPUTFILE = "clover.pgm";
 static char * OUTPUTFILE = "processedClover.pgm";
-static const unsigned char (*PTR)(int, int, unsigned char, int*) = pixelFunc;
+static const unsigned char (*PTR)(int, int, unsigned char) = pixelFunc;
 
 // main function
 int main(void) { 
@@ -43,15 +43,14 @@ int main(void) {
 	
 } 
 
-unsigned char pixelFunc(int i, int j, unsigned char p, int *k) {
+unsigned char pixelFunc(int i, int j, unsigned char p) {
 	
 	// if pixel index is odd in either x or y return NULL
 	if ( (i % 2) || (j % 2) ) {
 		return 0x00;	
 	}
-	// else return input pixel and increment array index
+	// else return input pixel
 	else {
-		(*k)++;
 		return p;
 		
 	}
