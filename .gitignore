@@ -1,4 +1,4 @@
-workspace/fftw-3.3.10/
-workspace/sshKey.txt
-workspace/sshKey.txt.pub
-workspace/archive/
+fftw-3.3.10/
+sshKey.txt
+sshKey.txt.pub
+archive/
